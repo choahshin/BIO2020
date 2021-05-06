@@ -1,6 +1,6 @@
 %% Input parameters for Biomass-nutrient-flow solver
 %% flags
-flag.restart = 1;   % restart trigger
+flag.restart = 0;   % restart trigger
 flag.adv = 0;       % advection trigger
 flag.DR = 1;        % diffusion-reaction trigger
 
@@ -10,8 +10,8 @@ num.dtmax = 1e-3;   % max time step size [h]
 num.tnmax = 1e3;    % max number of time steps
 num.flow = 1;       % how often we solve for flow
 num.tau = 1;        % number of minor time steps within each major time steps
-num.rec = 10;       % how often we record data
-num.plot = 10;      % how often we generate figure
+num.rec = 50;       % how often we record data
+num.plot = 50;      % how often we generate figure
 
 %% unit conversion factors from [m,s,kg] to ...
 unit.str_len = 'mm'; unit.length = 1e3; 
@@ -19,8 +19,8 @@ unit.str_time = 'h'; unit.time = 1./(3600);
 unit.str_mass = 'g'; unit.mass = 1e3;
 
 %% space in [m]
-x.lo = 0;       x.hi = 1000e-6;     x.n = 100;
-y.lo = 0;       y.hi = 1000e-6;     y.n = 100;
+x.lo = 0;       x.hi = 100e-6;     x.n = 100;
+y.lo = 0;       y.hi = 100e-6;     y.n = 100;
 
 %% geometry
 pm = 3;
@@ -60,7 +60,7 @@ flow.mu = 8.9e-4; % dynamic viscosity of water [Pa-s]
 b.kappa = .5;
 b.star = 1;
 b.nu = 0.9;
-b.init = 0.9.*b.star;
+b.init = 0.8.*b.star;
 b.eberla = 2;
 b.dB0 = 1e-4.*unit.time./unit.length.^2;
 b.eberlstar = 1.01;

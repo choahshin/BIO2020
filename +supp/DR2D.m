@@ -18,13 +18,15 @@ G.dBv = [G.dB(:,1),(G.dB(:,1:end-1) + G.dB(:,2:end))./2,G.dB(:,end)];
 % assign 0 for no-flow cell edges
 G.dBu(G.u == 0) = 0;
 G.dBv(G.v == 0) = 0;
+
 if flag.adv == 1
     if flow.dir <= 2; G.dBu([1,end],:) = 0; else; G.dBv(:,[1,end]) = 0; end
 else
-    G.dBu([1,end],:) = 0; G.dBv(:,[1:end]) = 0;
+    G.dBu([1,end],:) = 0; G.dBv(:,[1,end]) = 0;
 end
+
 % nutrient
-G.dN = n.df.*(b.star-B0)+ n.db.*B0;
+G.dN = n.df.*(b.star-B0)+n.db.*B0;
 % G.dN = n.df.*G.rock;
 % G.dN(G.b0' == 1) = n.db;
 G.dN(G.rock_id) = 0;
@@ -34,6 +36,7 @@ G.dNv = [G.dN(:,1),2./(1./G.dN(:,1:end-1)+1./G.dN(:,2:end)),G.dN(:,end)];
 if flag.adv == 1
     if flow.dir <= 2; G.dNu([1,end],:) = 0; else; G.dNv(:,[1,end]) = 0; end
 end
+
 %% stiffness matrices
 Np = x.n.*y.n; hx2 = 1./x.h.^2; hy2 = 1./y.h.^2;
 % index
@@ -76,12 +79,12 @@ else
 end
 % west
 if b.ind(2) == -1
-    b.Av(wind,wind) = b.Au(wind,wind) - G.dBu(1,:)'.*speye(y.n);
+    b.Au(wind,wind) = b.Au(wind,wind) - G.dBu(1,:)'.*speye(y.n);
 else
     b.F(wind) = b.F(wind) + G.dBu(1,:)'.*hx2.*b.WBC(:);
 end
 if n.ind(2) == -1
-    n.Av(wind,wind) = n.Au(wind,wind) - G.dNu(1,:)'.*speye(y.n);
+    n.Au(wind,wind) = n.Au(wind,wind) - G.dNu(1,:)'.*speye(y.n);
 else
     n.F(wind) = n.F(wind) + G.dNu(1,:)'.*hx2.*n.WBC(:);
 end
@@ -98,12 +101,12 @@ else
 end
 % east
 if b.ind(4) == -1
-    b.Av(eind,eind) = b.Au(eind,eind) - G.dBu(end,:)'.*speye(y.n);
+    b.Au(eind,eind) = b.Au(eind,eind) - G.dBu(end,:)'.*speye(y.n);
 else
     b.F(eind) = b.F(eind) + G.dBu(end,:)'.*hx2.*b.EBC(:);
 end
 if n.ind(4) == -1
-    n.Av(eind,eind) = n.Au(eind,eind) - G.dNu(end,:)'.*speye(y.n);
+    n.Au(eind,eind) = n.Au(eind,eind) - G.dNu(end,:)'.*speye(y.n);
 else
     n.F(eind) = n.F(eind) + G.dNu(end,:)'.*hx2.*n.EBC(:);
 end
@@ -117,15 +120,21 @@ n.F = dt.*n.F + N0(:);
 % monod function
 g = @(nval) n.kappa.*nval./(nval+n.N0);
 dg = @(nval) n.kappa.*n.N0./(nval+n.N0).^2;
+
 % (I+dt A)
 b.AA = speye(Np) + dt.*b.A;
 n.AA = speye(Np) + dt.*n.A;
 
 % select unknowns
 np = length(G.flow_id);
-b.AA = b.AA(G.flow_id,G.flow_id); n.AA = n.AA(G.flow_id,G.flow_id);
-b.F = b.F(G.flow_id);             n.F = n.F(G.flow_id);
-B1 = B0(G.flow_id);     N1 = N0(G.flow_id);     L1 = L0(G.flow_id);
+b.AA = b.AA(G.flow_id,G.flow_id); 
+n.AA = n.AA(G.flow_id,G.flow_id);
+b.F = b.F(G.flow_id);             
+n.F = n.F(G.flow_id);
+B1 = B0(G.flow_id);     
+N1 = N0(G.flow_id);     
+L1 = L0(G.flow_id);
+
 % nonlinear function F
 f1 = @(bnl) b.AA*bnl(1:np) - dt.*b.kappa.*bnl(1:np).*...
             g(bnl(np+1:2.*np)) - dt.*bnl(end-np+1:end) - b.F;
@@ -147,6 +156,7 @@ j33 = @(bnl) spdiags([(bnl(1:np)-b.star < bnl(end-np+1:end))],0,np,np);
 j = @(bnl) x.h.*y.h.*[j11(bnl), j12(bnl), j13(bnl);...
             j21(bnl), j22(bnl), j23(bnl);...
             j31(bnl), j32(bnl), j33(bnl)];
+
 % semi-smooth Newton
 iter = 0;
 max_iter = 10;
@@ -161,7 +171,7 @@ while iter < max_iter && (abs_res > abs_tol && rel_res > rel_tol)
     abs_res = norm(f(bnl),inf);
     rel_res = norm(bnl-bnl0,inf);
     bnl0 = bnl;
-    fprintf('\t Semismooth Newton: iter = %d, abs_res = %g, rel_res = %g \n',iter,abs_res,rel_res);
+    fprintf('\t DR: iter = %d, abs_res = %g, rel_res = %g \n',iter,abs_res,rel_res);
 end  
 
 bnlsol = mat2cell(bnl0,[np,np,np]);
