@@ -21,6 +21,21 @@ else
 end
 % save a copy of inputcard into recording folder
 copyfile(sprintf('+Scenario/%s',inputcard),sprintf('%s/',dir.version));
+%% interpret geometry =====================================================
+% read image
+% G.rock = sparse(x.n,y.n)+1;
+G.rock = flipud(round(im2double(rgb2gray(imresize(imread(...
+            sprintf('Porous_Medium/%s.jpg',porous_medium)),[y.n,x.n])))))';
+OB = flipud(round(im2double(rgb2gray(imresize(imread(...
+            sprintf('Obstacle/%s.jpg',obstacle)),[y.n,x.n])))))';    
+% indices for rock (0), obstacle(2), flow(1)        
+G.omega = sparse(x.n,y.n)+1;
+G.omega(OB == 0) = 2;
+G.omega(G.rock == 0) = 0;
+G.rock_id = find(G.omega == 0);
+G.flow_id = find(G.omega > 0);
+G.u = [G.rock(1,:); 2./(1./G.rock(1:end-1,:)+1./G.rock(2:end,:));G.rock(end,:)];
+G.v = [G.rock(:,1), 2./(1./G.rock(:,1:end-1)+1./G.rock(:,2:end)),G.rock(:,end)];
 %% unit conversion ========================================================
 x.lo = x.lo.*unit.length; x.hi = x.hi.*unit.length;
 y.lo = y.lo.*unit.length; y.hi = y.hi.*unit.length;
@@ -44,9 +59,18 @@ n.db = n.db.*unit.length.^2./unit.time;
 %% generate mesh ==========================================================
 % extended domain
 x.nw = 0; y.nw = 0;
-% if flag.adv == 1 && (pm > 1 || (obst > 0 && G.kb == 0))
-%     if flow.dir <= 2; y.nw = floor(y.n./2); else; x.nw = floor(x.n./2); end
-% end
+if flag.adv == 1 || flag.flow == 1
+    switch flow.dir
+        case 1 % bottom to top
+            if sum(G.omega(:,1)) > 0; y.nw = floor(2.*y.n); end
+        case 2 % top to bottom
+            if sum(G.omega(:,end)) > 0; y.nw = floor(2.*y.n); end
+        case 3 % left to right
+            if sum(G.omega(1,:)) > 0; x.nw = floor(2.*x.n); end
+        case 4 % right to left
+            if sum(G.omega(end,:)) > 0; x.nw = floor(2.*x.n); end
+    end
+end
 % mesh size
 x.h = (x.hi-x.lo)./x.n;     y.h = (y.hi-y.lo)./y.n;
 % indices for domain of interest
@@ -65,7 +89,7 @@ y.e = [y.a:y.h:y.b]'; y.ce = 0.5.*(y.e(1:end-1)+y.e(2:end)); y.c = y.ce(y.ind);
 [x.p,y.p] = meshgrid(x.c,y.c);
 %% flow boundary conditions ===============================================
 % [north, west, south, east]
-if flag.adv == 1
+if flag.adv == 1 || flag.flow == 1
     p.N = x.N.*y.N;
     p.nind = [p.N-x.N+1:p.N];   p.sind = [1:x.N]';
     p.wind = [1:x.N:p.N]';      p.eind = [x.N:x.N:p.N]';
@@ -97,21 +121,7 @@ if flag.adv == 1
             u.EBC = -flow.uf(y.a,y.b,y.ce,flow.um);
     end
 end
-%% interpret geometry =====================================================
-% read image
-% G.rock = sparse(x.n,y.n)+1;
-G.rock = flipud(round(im2double(rgb2gray(imresize(imread(...
-            sprintf('Porous_Medium/%s.jpg',porous_medium)),[y.n,x.n])))))';
-OB = flipud(round(im2double(rgb2gray(imresize(imread(...
-            sprintf('Obstacle/%s.jpg',obstacle)),[y.n,x.n])))))';    
-% indices for rock (0), obstacle(2), flow(1)        
-G.omega = sparse(x.n,y.n)+1;
-G.omega(OB == 0) = 2;
-G.omega(G.rock == 0) = 0;
-G.rock_id = find(G.omega == 0);
-G.flow_id = find(G.omega > 0);
-G.u = [G.rock(1,:); 2./(1./G.rock(1:end-1,:)+1./G.rock(2:end,:));G.rock(end,:)];
-G.v = [G.rock(:,1), 2./(1./G.rock(:,1:end-1)+1./G.rock(:,2:end)),G.rock(:,end)];
+
 %% Biomass and nutrient ===================================================
 % initial conditions
 b.IC = 0*G.omega; b.IC(G.omega == 2) = b.init; b.IC = b.IC';
@@ -142,6 +152,11 @@ cc.gray = [128 128 128]./255;
 diary(sprintf('%s/record.txt',dir.version));
 diary on
 fprintf('Scenario %d case %d: ',ns,nc);
+if flag.flow == 1
+    fprintf('Flow only\n');
+    fprintf(sprintf('Flow direction: %d\n',flow.dir));
+    fprintf(sprintf('Flow bdry ID: [%d,%d,%d,%d]\n',flow.bdry_id(1),flow.bdry_id(2),flow.bdry_id(3),flow.bdry_id(4)));
+else
 if flag.adv == 1; fprintf('Adv-Diff-Reac\n'); else; fprintf('Diff-Reac\n'); end
 fprintf('Units length [%s], time [%s], mass [%s]\n',unit.str_len,unit.str_time,unit.str_mass);
 fprintf('Geometry --------------------------------\n');
@@ -156,26 +171,6 @@ if flag.adv == 1
     fprintf('flow direction = %d\n',flow.dir);
     fprintf('mean velocity = %.2e\n',flow.um);
 end
-% fprintf('Biomass ---------------------------------\n');
-% fprintf('B* = %g\n', b.star);
-% fprintf('B_* = %g\n',b.star2);
-% fprintf('B_o = %g\n',b.init);
-% fprintf('d_B = %.4e\n',b.dB0);
-% fprintf('alpha = %g\n',b.eberla);
-% fprintf('Utilitzation parameter = %.2e\n',b.kappa);
-% fprintf('Nutrient --------------------------------\n');
-% fprintf('N_inlet = %g\n', n.inlet);
-% fprintf('N_o = %g\n',n.init);
-% fprintf('Dimensionless factor in g(N) = %.2e\n',n.kappa);
-% fprintf('Monod constant = %g\n',n.N0);
-% fprintf('recording -------------------------------\n');
-% fprintf('num.flow = %d\n',num.flow);
-% fprintf('num.tau = %d\n',num.tau);
-% fprintf('num.plot = %d\n',num.plot);
-% fprintf('max_tn = %d\n',num.tnmax);
-% fprintf('max_dt = %d\n',num.dtmax);
-% fprintf('restart = %d\n',flag.restart);
-% fprintf('advection = %d\n',flag.adv);
-% fprintf('diffusion-reaction = %d\n',flag.DR);
+end
 fprintf('=========================================\n');
 diary off

@@ -2,8 +2,8 @@
 
 %% iteration
 while (t < T && tn < num.tnmax)
-    if flag.adv == 1
-        if mod(tn,num.flow) == 0 || length(flag.Gb) == 1
+    if flag.adv == 1 || flag.flow == 1
+        if mod(tn,num.flow) == 0 || length(flag.Gb) == 1 || flag.flow == 1
             flag.Gbn = 0;
             % solve for flow
             [U,V,P,nu,K] = supp.Stokes2D(x,y,G,flow,u,v,p);
@@ -14,6 +14,9 @@ while (t < T && tn < num.tnmax)
                 case 2; outflow = norm(V(1,:),inf);
                 case 3; outflow = norm(U(:,end),inf);
                 case 4; outflow = norm(U(1,:),inf);
+            end
+            if flag.flow == 1
+                break;
             end
         end
         if outflow == 0; break; end

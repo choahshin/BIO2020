@@ -18,7 +18,7 @@ if t == 0
     print(sprintf('%s/InitialOmega',dir.tn),'-dpng','-r100');
     cla(plt1)
 end
-if flag.adv == 1
+if flag.adv == 1 || flag.flow == 1
     Uave = (U(:,1:end-1)+U(:,2:end))./2;
     Vave = (V(1:end-1,:)+V(2:end,:))./2;
     velmag = sqrt(Uave.^2 + Vave.^2);
