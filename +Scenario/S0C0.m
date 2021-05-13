@@ -1,8 +1,9 @@
 %% Input parameters for Biomass-nutrient-flow solver
 %% flags
-flag.restart = 1;   % restart trigger
+flag.restart = 0;   % restart trigger
 flag.adv = 0;       % advection trigger
-flag.DR = 1;        % diffusion-reaction trigger
+flag.DR = 0;        % diffusion-reaction trigger
+flag.flow = 1;      % flow only
 
 %% constraints
 num.T = 1e2;        % max time in [h]
@@ -19,8 +20,8 @@ unit.str_time = 'h'; unit.time = 1./(3600);
 unit.str_mass = 'g'; unit.mass = 1e3;
 
 %% space in [m]
-x.lo = 0;       x.hi = 1000e-6;     x.n = 100;
-y.lo = 0;       y.hi = 1000e-6;     y.n = 100;
+x.lo = 0;       x.hi = 1000e-6;     x.n = 50;
+y.lo = 0;       y.hi = 1000e-6;     y.n = 50;
 
 %% geometry
 pm = 3;
