@@ -1,4 +1,4 @@
-function [end_clock] = BN_Flow(ns,nc)
+function [end_clock] = BN_Flow(ns,nc,nd)
 %=========================================================================%
 % 2d coupled flow and biomass-nutrient dynamics simulator
 %-------------------------------------------------------------------------%
@@ -43,6 +43,7 @@ function [end_clock] = BN_Flow(ns,nc)
 % supp.record records data: [B,N,L] and [U,V,P,K] if flow is enabled
 % supp.figGen saves figures: B, N, and velocity, P if flow is enabled 
 %=========================================================================%
+if nargin <3; nd = 3; ne = 1; nf = 1; end 
     %% import data
     supp.input_data;
 
