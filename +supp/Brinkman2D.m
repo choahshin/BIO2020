@@ -17,7 +17,7 @@ Fu = fu(:);
 
 % v
 Avvx = kron(speye(y.N+1),spdiags([-1,2,-1].*ones(x.N,1),[-1:1],x.N,x.N));
-Avvy = spdiags([-1,2,-1].*ones(v.N,1),[-x.N,x.N],v.N,v.N);
+Avvy = spdiags([-1,2,-1].*ones(v.N,1),[-x.N,0,x.N],v.N,v.N);
 Avv = hx2.*Avvx + hy2.*Avvy;
 
 Bv = hy.*spdiags([-1,1].*ones(v.N,1),[-x.N,0],v.N,p.N);
