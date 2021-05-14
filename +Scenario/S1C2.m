@@ -1,6 +1,9 @@
 %% Input parameters for Biomass-nutrient-flow solver
 %% flags
 flag.restart = 0;   % restart trigger
+if nf == 2
+    flag.restart = 1;   % restart trigger
+end
 flag.adv = 0;       % advection trigger
 flag.DR = 1;        % diffusion-reaction trigger
 flag.flow = 0;      % flow only

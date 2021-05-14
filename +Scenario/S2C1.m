@@ -1,6 +1,9 @@
 %% Input parameters for Biomass-nutrient-flow solver
 %% flags
 flag.restart = 0;   % restart trigger
+if nf == 2
+    flag.restart = 1;   % restart trigger
+end
 flag.adv = 1;       % advection trigger
 flag.DR = 1;        % diffusion-reaction trigger
 flag.flow = 0;      % flow only
@@ -52,7 +55,7 @@ kb = 1e-9; % permeability of obstacle
 % Dirichlet inlet, natural outflow, no-slip walls
 flow.um = 1e-10;   % mean flow velocity
 flow.uf = @(LB,UB,val,Um) -6.*Um.*(LB-val).*(UB-val)./(LB-UB).^2; % fully developed parabolic velocity
-flow.dir = 3; % flow direction; 1: B->T, 2: T->B, 3: L->R, 4: R->L
+flow.dir = nd; % flow direction; 1: B->T, 2: T->B, 3: L->R, 4: R->L
 flow.cfl = 0.95;
 flow.mu = 8.9e-4; % dynamic viscosity of water [Pa-s]
 
