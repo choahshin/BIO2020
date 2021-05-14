@@ -1,6 +1,6 @@
 % figure generation
 wx = 8; wy = 7;
-if t == 0
+if t == 0 
     %% generate initial domain image
     plt1 = figure('visible','off');
     h1 = pcolor(x.p,y.p,G.omega');
@@ -39,7 +39,7 @@ if flag.adv == 1 || flag.flow == 1
     hold off
     set(gca,'fontsize',14);
     set(gcf,'PaperUnits','inches','PaperPosition',[0 0 wx wy]);
-    print(sprintf('%s/u_tn%d',dir.tn,tn),'-dpng','-r100');
+    print(sprintf('%s/u_tn%d_dir%d',dir.tn,tn,nd),'-dpng','-r100');
     clear Uave Vave velmag velmax velbar;
     cla(plt2);
     %%      
@@ -59,7 +59,7 @@ if flag.adv == 1 || flag.flow == 1
           tn,t,unit.str_time,P_max0.*unit.length.*unit.time./unit.mass),'interpreter','latex');
     set(gca,'fontsize',14);
     set(gcf,'PaperUnits','inches','PaperPosition',[0 0 wx wy]);
-    print(sprintf('%s/p_tn%d',dir.tn,tn),'-dpng','-r100');
+    print(sprintf('%s/p_tn%d_dir%d',dir.tn,tn,nd),'-dpng','-r100');
     clear Ptemp P_max0;
     cla(plt3)
 end
@@ -84,6 +84,7 @@ print(sprintf('%s/B_tn%d',dir.tn,tn),'-dpng','-r100');
 clear Bbar;
 cla(plt4);
 %% nutrient
+if flag.flow ~=1
 plt5 = figure('visible','off');
 Nbar = N0'; 
 Nbar(G.rock_id) = nan;
@@ -103,3 +104,4 @@ set(gca,'fontsize',14);
 print(sprintf('%s/N_tn%d',dir.tn,tn),'-dpng','-r100');          
 clear Nbar;
 cla(plt5);
+end
