@@ -62,13 +62,13 @@ x.nw = 0; y.nw = 0;
 if flag.adv == 1 || flag.flow == 1
     switch flow.dir
         case 1 % bottom to top
-            if sum(G.omega(:,1)) > 0; y.nw = floor(2.*y.n); end
+            if sum(G.omega(:,1)) < x.n; y.nw = floor(2.*y.n); end
         case 2 % top to bottom
-            if sum(G.omega(:,end)) > 0; y.nw = floor(2.*y.n); end
+            if sum(G.omega(:,end)) < x.n; y.nw = floor(2.*y.n); end
         case 3 % left to right
-            if sum(G.omega(1,:)) > 0; x.nw = floor(2.*x.n); end
+            if sum(G.omega(1,:)) < y.n; x.nw = floor(2.*x.n); end
         case 4 % right to left
-            if sum(G.omega(end,:)) > 0; x.nw = floor(2.*x.n); end
+            if sum(G.omega(end,:)) < y.n; x.nw = floor(2.*x.n); end
     end
 end
 % mesh size
@@ -110,7 +110,7 @@ if flag.adv == 1 || flag.flow == 1
         case 2 % top to bottom
             flow.bdry_id =[1, 1, -1, 1];
             flow.inlet_id = 1;
-            v.NBC = -flow.uf(x.a,x.b,x.ce,flow.um);
+            v.NBC = flow.uf(x.a,x.b,x.ce,flow.um);
         case 3 % left to right
             flow.bdry_id =[1, 1, 1, -1];
             flow.inlet_id = 2;
@@ -118,7 +118,7 @@ if flag.adv == 1 || flag.flow == 1
         case 4 % right to left
             flow.bdry_id =[1, -1, 1, 1];
             flow.inlet_id = 4;
-            u.EBC = -flow.uf(y.a,y.b,y.ce,flow.um);
+            u.EBC = flow.uf(y.a,y.b,y.ce,flow.um);
     end
 end
 
@@ -155,7 +155,6 @@ fprintf('Scenario %d case %d: ',ns,nc);
 if flag.flow == 1
     fprintf('Flow only\n');
     fprintf(sprintf('Flow direction: %d\n',flow.dir));
-    fprintf(sprintf('Flow bdry ID: [%d,%d,%d,%d]\n',flow.bdry_id(1),flow.bdry_id(2),flow.bdry_id(3),flow.bdry_id(4)));
 else
 if flag.adv == 1; fprintf('Adv-Diff-Reac\n'); else; fprintf('Diff-Reac\n'); end
 fprintf('Units length [%s], time [%s], mass [%s]\n',unit.str_len,unit.str_time,unit.str_mass);
