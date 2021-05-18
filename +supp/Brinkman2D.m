@@ -27,6 +27,21 @@ Fv = fv(:);
 C = sparse(p.N,p.N);
 Fp = sparse(p.N,1);
 
+%% Darcy drag term
+Ge.rock = sparse(x.N,y.N) + 1;
+rock = G.rock;
+Ge.K = sparse(x.N,y.N) + inf;
+G.K = sparse(x.n,y.n) + inf;
+G.K(G.b0'==1) = G.kb;
+Ge.K(x.ind,y.ind) = G.K;
+Ge.Ku = [Ge.K(1,:);2./(1./Ge.K(1:end-1,:)+1./Ge.K(2:end,:));Ge.K(end,:)];
+Ge.Kv = [Ge.K(:,1),2./(1./Ge.K(:,1:end-1)+1./Ge.K(:,2:end)),Ge.K(:,end)];
+Auu = Auu + spdiags(1./Ge.Ku(:),0,u.N,u.N);
+Avv = Avv + spdiags(1./Ge.Kv(:),0,v.N,v.N);
+Ge.rock(x.ind,y.ind) = rock;
+Ge.u = [Ge.rock(1,:);min(Ge.rock(1:end-1,:),Ge.rock(2:end,:));Ge.rock(end,:)];
+Ge.v = [Ge.rock(:,end),min(Ge.rock(:,1:end-1),Ge.rock(:,2:end)),Ge.rock(:,end)];
+
 %% boundary conditions
 %%% u
 % north
@@ -82,21 +97,6 @@ switch flow.inlet_id
     case 4; Fp(p.eind) = u.EBC(:).*hx;
 end
 Fp = Fp./flow.mu;
-%% Darcy drag term
-Ge.rock = sparse(x.N,y.N) + 1;
-rock = G.rock;
-Ge.K = sparse(x.N,y.N) + inf;
-G.K = sparse(x.n,y.n) + inf;
-G.K(G.b0'==1) = G.kb;
-Ge.K(x.ind,y.ind) = G.K;
-Ge.Ku = [Ge.K(1,:);2./(1./Ge.K(1:end-1,:)+1./Ge.K(2:end,:));Ge.K(end,:)];
-Ge.Kv = [Ge.K(:,1),2./(1./Ge.K(:,1:end-1)+1./Ge.K(:,2:end)),Ge.K(:,end)];
-Auu = Auu + spdiags(1./Ge.Ku(:),0,u.N,u.N);
-Avv = Avv + spdiags(1./Ge.Kv(:),0,v.N,v.N);
-Ge.rock(x.ind,y.ind) = rock;
-Ge.u = [Ge.rock(1,:);min(Ge.rock(1:end-1,:),Ge.rock(2:end,:));Ge.rock(end,:)];
-Ge.v = [Ge.rock(:,end),min(Ge.rock(:,1:end-1),Ge.rock(:,2:end)),Ge.rock(:,end)];
-
 %% select unknowns
 indu = find(Ge.u > 0);      Lu = length(indu);
 indv = find(Ge.v > 0);      Lv = length(indv);
